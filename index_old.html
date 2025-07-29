@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNG/JPG to WebP Converter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #64748b;
+        }
+
+        .upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            background: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 2rem;
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: #3b82f6;
+            background: #f0f9ff;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #94a3b8;
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            color: #475569;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-subtext {
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+        }
+
+        .controls {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .quality-control {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .quality-slider {
+            width: 150px;
+            height: 6px;
+            border-radius: 3px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .quality-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+        }
+
+        .quality-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #cbd5e1;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+
+        .result-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #f1f5f9;
+        }
+
+        .result-info {
+            padding: 1rem;
+        }
+
+        .result-filename {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            word-break: break-all;
+        }
+
+        .result-sizes {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 1rem;
+        }
+
+        .size-reduction {
+            color: #059669;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #dc2626;
+        }
+
+        .success-message {
+            background: #f0fdf4;
+            color: #059669;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #059669;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .quality-control {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PNG/JPG to WebP Converter</h1>
+            <p>Konversi gambar ke format WebP dengan kualitas tinggi, langsung di browser Anda</p>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📷</div>
+            <div class="upload-text">Drag & drop gambar di sini</div>
+            <div class="upload-subtext">atau klik untuk memilih file (PNG, JPG, JPEG - max 10MB per file)</div>
+            <input type="file" id="fileInput" class="file-input" multiple accept="image/png,image/jpeg,image/jpg">
+        </div>
+
+        <div class="controls">
+            <div class="quality-control">
+                <label for="qualitySlider">Kualitas WebP:</label>
+                <input type="range" id="qualitySlider" class="quality-slider" min="0.1" max="1" step="0.05" value="0.95">
+                <span id="qualityValue">0.95</span>
+            </div>
+            <button class="btn btn-primary" id="convertBtn" disabled>
+                🔄 Konversi ke WebP
+            </button>
+            <button class="btn btn-secondary" id="downloadAllBtn" disabled>
+                📦 Download Semua ZIP
+            </button>
+            <button class="btn btn-secondary" id="clearBtn">
+                🗑️ Hapus Semua
+            </button>
+        </div>
+
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-number" id="totalFiles">0</div>
+                <div class="stat-label">Total File</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="convertedFiles">0</div>
+                <div class="stat-label">Berhasil Dikonversi</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalSavings">0%</div>
+                <div class="stat-label">Rata-rata Penghematan</div>
+            </div>
+        </div>
+
+        <div id="messages"></div>
+
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        class WebPConverter {
+            constructor() {
+                this.files = [];
+                this.convertedFiles = [];
+                this.quality = 0.95;
+                
+                this.initializeEventListeners();
+            }
+
+            initializeEventListeners() {
+                const uploadArea = document.getElementById('uploadArea');
+                const fileInput = document.getElementById('fileInput');
+                const qualitySlider = document.getElementById('qualitySlider');
+                const qualityValue = document.getElementById('qualityValue');
+                const convertBtn = document.getElementById('convertBtn');
+                const downloadAllBtn = document.getElementById('downloadAllBtn');
+                const clearBtn = document.getElementById('clearBtn');
+
+                // Upload area events
+                uploadArea.addEventListener('click', () => fileInput.click());
+                uploadArea.addEventListener('dragover', this.handleDragOver.bind(this));
+                uploadArea.addEventListener('dragleave', this.handleDragLeave.bind(this));
+                uploadArea.addEventListener('drop', this.handleDrop.bind(this));
+
+                // File input
+                fileInput.addEventListener('change', this.handleFileSelect.bind(this));
+
+                // Quality slider
+                qualitySlider.addEventListener('input', (e) => {
+                    this.quality = parseFloat(e.target.value);
+                    qualityValue.textContent = this.quality.toFixed(2);
+                });
+
+                // Buttons
+                convertBtn.addEventListener('click', this.convertAllFiles.bind(this));
+                downloadAllBtn.addEventListener('click', this.downloadAllAsZip.bind(this));
+                clearBtn.addEventListener('click', this.clearAll.bind(this));
+            }
+
+            handleDragOver(e) {
+                e.preventDefault();
+                document.getElementById('uploadArea').classList.add('dragover');
+            }
+
+            handleDragLeave(e) {
+                e.preventDefault();
+                document.getElementById('uploadArea').classList.remove('dragover');
+            }
+
+            handleDrop(e) {
+                e.preventDefault();
+                document.getElementById('uploadArea').classList.remove('dragover');
+                const files = Array.from(e.dataTransfer.files);
+                this.processFiles(files);
+            }
+
+            handleFileSelect(e) {
+                const files = Array.from(e.target.files);
+                this.processFiles(files);
+            }
+
+            processFiles(files) {
+                const validFiles = files.filter(file => {
+                    const isValidType = ['image/png', 'image/jpeg', 'image/jpg'].includes(file.type);
+                    const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB
+
+                    if (!isValidType) {
+                        this.showMessage(`File ${file.name} bukan format yang didukung (PNG/JPG)`, 'error');
+                        return false;
+                    }
+
+                    if (!isValidSize) {
+                        this.showMessage(`File ${file.name} terlalu besar (max 10MB)`, 'error');
+                        return false;
+                    }
+
+                    return true;
+                });
+
+                if (validFiles.length > 0) {
+                    this.addFiles(validFiles);
+                    this.showMessage(`${validFiles.length} file berhasil dimuat`, 'success');
+                }
+            }
+
+            addFiles(newFiles) {
+                // Handle duplicate names
+                newFiles.forEach(file => {
+                    let fileName = file.name;
+                    let counter = 1;
+                    
+                    while (this.files.some(f => f.name === fileName)) {
+                        const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+                        const ext = file.name.split('.').pop();
+                        fileName = `${nameWithoutExt}_${counter}.${ext}`;
+                        counter++;
+                    }
+
+                    const fileObj = {
+                        id: Date.now() + Math.random(),
+                        file: file,
+                        name: fileName,
+                        originalSize: file.size,
+                        converted: false,
+                        webpBlob: null,
+                        webpSize: 0,
+                        progress: 0
+                    };
+
+                    this.files.push(fileObj);
+                });
+
+                this.updateUI();
+            }
+
+            updateUI() {
+                const totalFiles = this.files.length;
+                const convertedFiles = this.convertedFiles.length;
+                
+                // Update stats
+                if (totalFiles > 0) {
+                    document.getElementById('stats').style.display = 'grid';
+                    document.getElementById('totalFiles').textContent = totalFiles;
+                    document.getElementById('convertedFiles').textContent = convertedFiles;
+                    
+                    if (convertedFiles > 0) {
+                        const totalSavings = this.convertedFiles.reduce((acc, file) => {
+                            const savings = ((file.originalSize - file.webpSize) / file.originalSize) * 100;
+                            return acc + savings;
+                        }, 0);
+                        document.getElementById('totalSavings').textContent = Math.round(totalSavings / convertedFiles) + '%';
+                    }
+                } else {
+                    document.getElementById('stats').style.display = 'none';
+                }
+
+                // Update buttons
+                document.getElementById('convertBtn').disabled = totalFiles === 0;
+                document.getElementById('downloadAllBtn').disabled = convertedFiles === 0;
+
+                // Render results
+                this.renderResults();
+            }
+
+            renderResults() {
+                const resultsContainer = document.getElementById('results');
+                resultsContainer.innerHTML = '';
+
+                this.files.forEach(fileObj => {
+                    const card = document.createElement('div');
+                    card.className = 'result-card';
+                    card.innerHTML = `
+                        <img class="result-image" src="${URL.createObjectURL(fileObj.file)}" alt="${fileObj.name}">
+                        <div class="result-info">
+                            <div class="result-filename">${fileObj.name.replace(/\.[^/.]+$/, ".webp")}</div>
+                            <div class="result-sizes">
+                                <span>Original: ${this.formatFileSize(fileObj.originalSize)}</span>
+                                ${fileObj.converted ? `<span>WebP: ${this.formatFileSize(fileObj.webpSize)}</span>` : ''}
+                            </div>
+                            ${fileObj.converted && fileObj.originalSize > fileObj.webpSize ? 
+                                `<div class="size-reduction">Penghematan: ${Math.round(((fileObj.originalSize - fileObj.webpSize) / fileObj.originalSize) * 100)}%</div>` : 
+                                ''
+                            }
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${fileObj.progress}%"></div>
+                            </div>
+                            ${fileObj.converted ? 
+                                `<button class="btn btn-primary" onclick="converter.downloadSingle('${fileObj.id}')">📥 Download</button>` :
+                                `<span style="color: #64748b;">Menunggu konversi...</span>`
+                            }
+                        </div>
+                    `;
+                    resultsContainer.appendChild(card);
+                });
+            }
+
+            async convertAllFiles() {
+                document.getElementById('convertBtn').disabled = true;
+                document.getElementById('convertBtn').innerHTML = '⏳ Mengkonversi...';
+
+                for (let i = 0; i < this.files.length; i++) {
+                    const fileObj = this.files[i];
+                    if (!fileObj.converted) {
+                        await this.convertSingleFile(fileObj);
+                    }
+                }
+
+                document.getElementById('convertBtn').innerHTML = '✅ Selesai';
+                setTimeout(() => {
+                    document.getElementById('convertBtn').innerHTML = '🔄 Konversi ke WebP';
+                    document.getElementById('convertBtn').disabled = false;
+                }, 2000);
+            }
+
+            async convertSingleFile(fileObj) {
+                return new Promise((resolve) => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+
+                    img.onload = () => {
+                        canvas.width = img.naturalWidth;
+                        canvas.height = img.naturalHeight;
+                        
+                        // Simulate progress
+                        let progress = 0;
+                        const progressInterval = setInterval(() => {
+                            progress += 10;
+                            fileObj.progress = Math.min(progress, 90);
+                            this.updateUI();
+                        }, 50);
+
+                        ctx.drawImage(img, 0, 0);
+                        
+                        canvas.toBlob((blob) => {
+                            clearInterval(progressInterval);
+                            fileObj.progress = 100;
+                            fileObj.webpBlob = blob;
+                            fileObj.webpSize = blob.size;
+                            fileObj.converted = true;
+                            
+                            this.convertedFiles.push(fileObj);
+                            this.updateUI();
+                            resolve();
+                        }, 'image/webp', this.quality);
+                    };
+
+                    img.src = URL.createObjectURL(fileObj.file);
+                });
+            }
+
+            downloadSingle(fileId) {
+                const fileObj = this.files.find(f => f.id == fileId);
+                if (!fileObj || !fileObj.converted) return;
+
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(fileObj.webpBlob);
+                link.download = fileObj.name.replace(/\.[^/.]+$/, ".webp");
+                link.click();
+            }
+
+            async downloadAllAsZip() {
+                if (this.convertedFiles.length === 0) return;
+
+                document.getElementById('downloadAllBtn').innerHTML = '⏳ Membuat ZIP...';
+                document.getElementById('downloadAllBtn').disabled = true;
+
+                const zip = new JSZip();
+
+                this.convertedFiles.forEach(fileObj => {
+                    const fileName = fileObj.name.replace(/\.[^/.]+$/, ".webp");
+                    zip.file(fileName, fileObj.webpBlob);
+                });
+
+                try {
+                    const zipBlob = await zip.generateAsync({type: "blob"});
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(zipBlob);
+                    link.download = `converted_webp_${new Date().getTime()}.zip`;
+                    link.click();
+
+                    this.showMessage('File ZIP berhasil diunduh!', 'success');
+                } catch (error) {
+                    this.showMessage('Gagal membuat file ZIP', 'error');
+                } finally {
+                    document.getElementById('downloadAllBtn').innerHTML = '📦 Download Semua ZIP';
+                    document.getElementById('downloadAllBtn').disabled = false;
+                }
+            }
+
+            clearAll() {
+                this.files = [];
+                this.convertedFiles = [];
+                document.getElementById('fileInput').value = '';
+                this.updateUI();
+                this.showMessage('Semua file berhasil dihapus', 'success');
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            showMessage(message, type) {
+                const messagesContainer = document.getElementById('messages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
+                messageDiv.textContent = message;
+                
+                messagesContainer.appendChild(messageDiv);
+                
+                setTimeout(() => {
+                    messageDiv.remove();
+                }, 5000);
+            }
+        }
+
+        // Initialize converter
+        const converter = new WebPConverter();
+    </script>
+</body>
+</html>
