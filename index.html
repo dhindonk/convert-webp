@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -108,29 +109,24 @@
         }
 
         .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            display: flex;
             gap: 1rem;
-            margin-bottom: 2rem;
         }
 
         .stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 8px;
             text-align: center;
         }
 
         .stat-number {
-            font-size: 2rem;
+            /* font-size: 2rem; */
             font-weight: 700;
-            color: #3b82f6;
+            color: #619cf9;
         }
 
         .stat-label {
             font-size: 0.9rem;
             color: #64748b;
-            margin-top: 0.5rem;
+            margin-top: 0.1rem;
         }
 
         .controls {
@@ -313,7 +309,7 @@
             color: #dc2626;
             padding: 1rem;
             border-radius: 6px;
-            margin-bottom: 1rem; 
+            margin-bottom: 1rem;
         }
 
         .success-message {
@@ -321,7 +317,7 @@
             color: #059669;
             padding: 1rem;
             border-radius: 6px;
-            margin-bottom: 1rem; 
+            margin-bottom: 1rem;
         }
 
         .storage-info {
@@ -329,7 +325,7 @@
             color: #1e40af;
             padding: 1rem;
             border-radius: 6px;
-            margin-bottom: 1rem; 
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -363,13 +359,18 @@
                 padding: 1rem;
             }
 
+            .header {
+                padding-top: 50px;
+                margin-bottom: 1rem;
+            }
+
             .header h1 {
                 font-size: 2rem;
             }
 
             .privacy-badges {
-                flex-direction: column;
                 align-items: center;
+                margin-bottom: 0;
             }
 
             .controls {
@@ -391,12 +392,13 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
             <h1>PNG/JPG to WebP Converter</h1>
             <p>Konversi gambar ke format WebP dengan kualitas tinggi, langsung di browser Anda</p>
-            
+
             <div class="privacy-badges">
                 <div class="privacy-badge">
                     <i class='bx bx-shield-check'></i>
@@ -424,10 +426,11 @@
             <input type="file" id="fileInput" class="file-input" multiple accept="image/png,image/jpeg,image/jpg">
         </div>
 
-        <div class="controls">
+        <div class="controls" id="controls">
             <div class="quality-control">
                 <label for="qualitySlider">Kualitas WebP:</label>
-                <input type="range" id="qualitySlider" class="quality-slider" min="0.1" max="1" step="0.05" value="0.95">
+                <input type="range" id="qualitySlider" class="quality-slider" min="0.1" max="1" step="0.05"
+                    value="0.95">
                 <span id="qualityValue">0.95</span>
             </div>
             <button class="btn btn-primary" id="convertBtn" disabled>
@@ -439,26 +442,26 @@
             <button class="btn btn-secondary" id="clearBtn">
                 <i class='bx bx-trash'></i> Hapus Semua
             </button>
+
+            <div class="stats" id="stats" style="display: none;">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalFiles">0</div>
+                    <div class="stat-label">Total File</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="convertedFiles">0</div>
+                    <div class="stat-label">Berhasil Dikonversi</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalSavings">0%</div>
+                    <div class="stat-label">Rata2 hemat</div>
+                </div>
+            </div>
         </div>
 
         <div class="reconvert-notice" id="reconvertNotice">
             <i class='bx bx-info-circle'></i>
             Kualitas WebP telah diubah. Klik "Konversi ke WebP" untuk mengkonversi ulang dengan kualitas baru.
-        </div>
-
-        <div class="stats" id="stats" style="display: none;">
-            <div class="stat-card">
-                <div class="stat-number" id="totalFiles">0</div>
-                <div class="stat-label">Total File</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="convertedFiles">0</div>
-                <div class="stat-label">Berhasil Dikonversi</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="totalSavings">0%</div>
-                <div class="stat-label">Rata-rata Penghematan</div>
-            </div>
         </div>
 
         <div id="messages"></div>
@@ -469,7 +472,8 @@
     <div class="footer-contact">
         <div>
             Made with ❤️ by <strong>Moch. Fahdin</strong><br>
-            <a href="https://www.linkedin.com/in/moch-fahdin-453b0a286/" target="_blank"><i class='bx bxl-linkedin'></i> LinkedIn</a>
+            <a href="https://www.linkedin.com/in/moch-fahdin-453b0a286/" target="_blank"><i class='bx bxl-linkedin'></i>
+                LinkedIn</a>
             <a href="https://github.com/dhindonk/" target="_blank"><i class='bx bxl-github'></i> GitHub</a>
         </div>
     </div>
@@ -481,7 +485,7 @@
                 this.convertedFiles = [];
                 this.quality = 0.95;
                 this.lastConvertedQuality = null;
-                
+
                 this.initializeEventListeners();
                 this.loadFromStorage();
             }
@@ -569,8 +573,8 @@
 
                 if (validFiles.length > 0) {
                     this.addFiles(validFiles);
-                    this.showMessage(`${validFiles.length} file berhasil dimuat`, 'success');
-                    this.showStorageInfo();
+                    // this.showMessage(`${validFiles.length} file berhasil dimuat`, 'success');
+                    // this.showStorageInfo();
                 }
             }
 
@@ -578,7 +582,7 @@
                 newFiles.forEach(file => {
                     let fileName = file.name;
                     let counter = 1;
-                    
+
                     while (this.files.some(f => f.name === fileName)) {
                         const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
                         const ext = file.name.split('.').pop();
@@ -605,6 +609,12 @@
 
                 this.updateUI();
                 this.saveToStorage();
+
+                // Scroll to results area
+                const controlsContainer = document.getElementById('controls');
+                if (controlsContainer) {
+                    controlsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
             }
 
             checkForQualityChange() {
@@ -631,13 +641,13 @@
             updateUI() {
                 const totalFiles = this.files.length;
                 const convertedFiles = this.files.filter(f => f.converted && !f.needsReconvert).length;
-                
+
                 // Update stats
                 if (totalFiles > 0) {
-                    document.getElementById('stats').style.display = 'grid';
+                    document.getElementById('stats').style.display = 'flex';
                     document.getElementById('totalFiles').textContent = totalFiles;
                     document.getElementById('convertedFiles').textContent = convertedFiles;
-                    
+
                     const validConvertedFiles = this.files.filter(f => f.converted && !f.needsReconvert);
                     if (validConvertedFiles.length > 0) {
                         const totalSavings = validConvertedFiles.reduce((acc, file) => {
@@ -668,10 +678,10 @@
                 this.files.forEach(fileObj => {
                     const card = document.createElement('div');
                     card.className = `result-card ${fileObj.needsReconvert ? 'needs-reconvert' : ''}`;
-                    
-                    const reconvertIndicator = fileObj.needsReconvert ? 
+
+                    const reconvertIndicator = fileObj.needsReconvert ?
                         '<div class="reconvert-indicator">Perlu Konversi Ulang</div>' : '';
-                    
+
                     card.innerHTML = `
                         ${reconvertIndicator}
                         <img class="result-image" src="${URL.createObjectURL(fileObj.file)}" alt="${fileObj.name}">
@@ -681,25 +691,25 @@
                                 <span>Original: ${this.formatFileSize(fileObj.originalSize)}</span>
                                 ${fileObj.converted && !fileObj.needsReconvert ? `<span>WebP: ${this.formatFileSize(fileObj.webpSize)}</span>` : ''}
                             </div>
-                            ${fileObj.converted && !fileObj.needsReconvert && fileObj.originalSize > fileObj.webpSize ? 
-                                `<div class="size-reduction">Penghematan: ${Math.round(((fileObj.originalSize - fileObj.webpSize) / fileObj.originalSize) * 100)}%</div>` : 
-                                ''
-                            }
-                            ${fileObj.converted && !fileObj.needsReconvert ? 
-                                `<div style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;">Kualitas: ${(fileObj.convertedQuality * 100).toFixed(0)}%</div>` : 
-                                ''
-                            }
+                            ${fileObj.converted && !fileObj.needsReconvert && fileObj.originalSize > fileObj.webpSize ?
+                            `<div class="size-reduction">Penghematan: ${Math.round(((fileObj.originalSize - fileObj.webpSize) / fileObj.originalSize) * 100)}%</div>` :
+                            ''
+                        }
+                            ${fileObj.converted && !fileObj.needsReconvert ?
+                            `<div style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;">Kualitas: ${(fileObj.convertedQuality * 100).toFixed(0)}%</div>` :
+                            ''
+                        }
                             <div class="progress-bar">
                                 <div class="progress-fill" style="width: ${fileObj.progress}%"></div>
                             </div>
-                            ${fileObj.converted && !fileObj.needsReconvert ? 
-                                `<button class="btn btn-primary" onclick="converter.downloadSingle('${fileObj.id}')">
+                            ${fileObj.converted && !fileObj.needsReconvert ?
+                            `<button class="btn btn-primary" onclick="converter.downloadSingle('${fileObj.id}')">
                                     <i class='bx bx-download'></i> Download
                                 </button>` :
-                                fileObj.needsReconvert ?
+                            fileObj.needsReconvert ?
                                 `<span style="color: #f59e0b; font-weight: 600;"><i class='bx bx-info-circle'></i> Konversi ulang diperlukan</span>` :
                                 `<span style="color: #64748b;"><i class='bx bx-time'></i> Menunggu konversi...</span>`
-                            }
+                        }
                         </div>
                     `;
                     resultsContainer.appendChild(card);
@@ -729,7 +739,7 @@
 
                 document.getElementById('convertBtn').innerHTML = '<i class="bx bx-check"></i> Selesai';
                 document.getElementById('convertBtn').className = 'btn btn-primary';
-                
+
                 setTimeout(() => {
                     document.getElementById('convertBtn').innerHTML = '<i class="bx bx-refresh"></i> Konversi ke WebP';
                     document.getElementById('convertBtn').disabled = false;
@@ -745,7 +755,7 @@
                     img.onload = () => {
                         canvas.width = img.naturalWidth;
                         canvas.height = img.naturalHeight;
-                        
+
                         // Simulate progress
                         let progress = 0;
                         const progressInterval = setInterval(() => {
@@ -755,7 +765,7 @@
                         }, 50);
 
                         ctx.drawImage(img, 0, 0);
-                        
+
                         canvas.toBlob((blob) => {
                             clearInterval(progressInterval);
                             fileObj.progress = 100;
@@ -765,7 +775,7 @@
                             fileObj.needsReconvert = false;
                             fileObj.convertedAt = new Date().toISOString();
                             fileObj.convertedQuality = this.quality;
-                            
+
                             this.updateUI();
                             resolve();
                         }, 'image/webp', this.quality);
@@ -799,7 +809,7 @@
                 });
 
                 try {
-                    const zipBlob = await zip.generateAsync({type: "blob"});
+                    const zipBlob = await zip.generateAsync({ type: "blob" });
                     const link = document.createElement('a');
                     link.href = URL.createObjectURL(zipBlob);
                     link.download = `converted_webp_${new Date().getTime()}.zip`;
@@ -849,7 +859,7 @@
 
                     // Save basic data first
                     localStorage.setItem('webp_converter_data', JSON.stringify(dataToSave));
-                    
+
                     // Save converted WebP blobs separately
                     this.files.forEach((f, index) => {
                         if (f.converted && f.webpBlob) {
@@ -877,10 +887,10 @@
                     if (!savedData) return;
 
                     const data = JSON.parse(savedData);
-                    
+
                     this.lastConvertedQuality = data.lastConvertedQuality;
                     this.quality = data.quality || 0.95;
-                    
+
                     // Update quality slider
                     document.getElementById('qualitySlider').value = this.quality;
                     document.getElementById('qualityValue').textContent = this.quality.toFixed(2);
@@ -889,7 +899,7 @@
                         // Note: We can't restore original File objects from localStorage
                         // But we can restore converted WebP data
                         const restoredFiles = [];
-                        
+
                         data.files.forEach(fileData => {
                             if (fileData.converted) {
                                 const savedBlob = localStorage.getItem(`webp_blob_${fileData.id}`);
@@ -900,15 +910,15 @@
                                         .then(blob => {
                                             // Create a placeholder file object for display
                                             const placeholderFile = new File([''], fileData.name, { type: 'image/placeholder' });
-                                            
+
                                             const fileObj = {
                                                 ...fileData,
                                                 file: placeholderFile,
                                                 webpBlob: blob
                                             };
-                                            
+
                                             restoredFiles.push(fileObj);
-                                            
+
                                             if (restoredFiles.length === data.files.filter(f => f.converted).length) {
                                                 this.files = restoredFiles;
                                                 this.updateUI();
@@ -947,16 +957,16 @@
             showMessage(message, type) {
                 const messagesContainer = document.getElementById('messages');
                 const messageDiv = document.createElement('div');
-                
+
                 let className = 'success-message';
                 if (type === 'error') className = 'error-message';
                 if (type === 'info') className = 'storage-info';
-                
+
                 messageDiv.className = className;
                 messageDiv.innerHTML = `<i class='bx ${type === 'error' ? 'bx-error' : type === 'info' ? 'bx-info-circle' : 'bx-check-circle'}'></i> ${message}`;
-                
+
                 messagesContainer.appendChild(messageDiv);
-                
+
                 setTimeout(() => {
                     messageDiv.remove();
                 }, type === 'info' ? 8000 : 5000);
@@ -967,4 +977,5 @@
         const converter = new WebPConverter();
     </script>
 </body>
+
 </html>
